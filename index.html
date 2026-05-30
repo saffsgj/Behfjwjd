@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>مشغل بث مباشر</title>
+
+<style>
+body {
+  margin: 0;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+}
+</style>
+
+</head>
+<body>
+
+<video id="video" controls autoplay muted></video>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+const video = document.getElementById('video');
+const videoSrc = "https://s1.marketplace-io-none-kode-steeeee.lol//b1_1080/index.m3u8?token=9285030d14b9c630be373e5929109968e5c27c70-31eebf7a6356cff7507d4a61e814f804-1780166676-1780155876&remote=169.224.97.141";
+
+if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(videoSrc);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        video.play();
+    });
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = videoSrc;
+    video.addEventListener('loadedmetadata', function () {
+        video.play();
+    });
+}
+
+// 🔊 فتح الصوت بعد 5 ثواني
+setTimeout(() => {
+    video.muted = false;
+}, 5000);
+
+</script>
+
+</body>
+</html>
