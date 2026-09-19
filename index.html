@@ -3,103 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تجربة المشغل المحمي - منقذ المهني</title>
-    <!-- مكتبة التشفير لتوليد الرابط الآمن -->
+    <title>تضمين المحاضرة</title>
+    <!-- مكتبة التشفير -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body { 
-            font-family: Tahoma, Arial, sans-serif; 
-            background-color: #1a1a1a; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-        }
-        .video-container { 
-            width: 100%; 
-            max-width: 800px; 
-            aspect-ratio: 16/9; 
-            background: #000; 
-            border-radius: 10px; 
-            overflow: hidden; 
-            position: relative; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
-        }
-        iframe { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-        }
-        /* تصميم العلامة المائية المانعة للتصوير */
+        body { background-color: #1a1a1a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .video-container { width: 100%; max-width: 800px; }
+        
+        /* تصميم العلامة المائية */
         .overlay-watermark { 
             position: absolute; 
-            pointer-events: none; /* مهم جداً لكي لا تمنع النقر على الفيديو */
-            color: rgba(255, 255, 255, 0.3); /* لون أبيض شفاف */
+            pointer-events: none; 
+            color: rgba(255, 255, 255, 0.4); 
             font-size: 1.5rem; 
             font-weight: bold; 
-            white-space: nowrap; 
             z-index: 10; 
             animation: float 15s linear infinite; 
         }
-        
-        /* حركة العلامة المائية العشوائية */
         @keyframes float {
-            0% { top: 10%; left: 10%; transform: translateX(0); }
-            25% { top: 20%; left: 70%; transform: translateX(-50%); }
-            50% { top: 80%; left: 80%; transform: translateX(-100%); }
-            75% { top: 70%; left: 20%; transform: translateX(-50%); }
-            100% { top: 10%; left: 10%; transform: translateX(0); }
+            0% { top: 10%; left: 10%; }
+            50% { top: 80%; left: 70%; }
+            100% { top: 10%; left: 10%; }
         }
     </style>
 </head>
 <body>
 
     <div class="video-container">
-        <!-- طبقة العلامة المائية -->
-        <div class="overlay-watermark" id="watermark"></div>
-        <!-- سيتم وضع iframe المشغل هنا بواسطة الجافاسكربت -->
-        <div id="player-wrapper"></div>
+        <!-- كود التضمين الخاص بك مع إضافة العلامة المائية ومعرف للمشغل -->
+        <div style="position:relative;padding-top:56.25%;">
+            <div class="overlay-watermark" id="watermark"></div>
+            
+            <!-- أزلنا src مؤقتاً لنضيفه عبر الكود ليكون محمياً -->
+            <iframe id="bunny-iframe" loading="lazy" style="border:0;position:absolute;top:0;height:100%;width:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen;" allowfullscreen="true"></iframe>
+        </div>
     </div>
 
     <script>
-        // --- 1. بياناتك الحقيقية التي جمعناها ---
+        // 1. البيانات الأساسية
         const libraryId = '757293'; 
         const videoId = '77e5bb55-4c5c-42dd-94bd-4cfdd11be025';
         const securityKey = 'f22e28ef-5235-45c2-8988-da3bb33b6846'; 
-        
-        // كود الطالب (في المستقبل ستجلبه من قاعدة البيانات بعد تسجيل دخوله)
-        const studentCode = 'الطالب: Ali-90123'; 
 
-        // --- 2. دالة توليد التشفير (Token) ---
+        // 2. توليد التشفير
         function generateToken(securityKey, videoId, expirationTime) {
             const stringToSign = securityKey + videoId + expirationTime;
             const hash = CryptoJS.SHA256(stringToSign);
             return hash.toString(CryptoJS.enc.Hex); 
         }
 
-        // --- 3. إعداد وقت الصلاحية (Expiration) ---
-        // الرابط سيكون صالحاً لمدة ساعتين فقط (7200 ثانية) من لحظة فتح الصفحة
+        // 3. وقت الصلاحية (ساعتين)
         const expirationTime = Math.floor(Date.now() / 1000) + 7200;
+        const token = generateToken(securityKey, videoId, expirationTime);
 
-        // --- 4. تشغيل الفيديو ---
-        function loadVideo() {
-            // توليد التوقيع السري
-            const token = generateToken(securityKey, videoId, expirationTime);
+        // 4. دمج الرابط الخاص بك مع التشفير
+        // استخدمنا نفس الإعدادات الموجودة في كود التضمين الخاص بك (autoplay, loop, etc)
+        const embedUrl = `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?autoplay=true&loop=false&muted=true&preload=true&responsive=true&token=${token}&expires=${expirationTime}`;
 
-            // بناء الرابط الموثق
-            const embedUrl = `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?token=${token}&expires=${expirationTime}`;
-
-            // حقن المشغل داخل الصفحة
-            const playerWrapper = document.getElementById('player-wrapper');
-            playerWrapper.innerHTML = `<iframe src="${embedUrl}" loading="lazy" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true"></iframe>`;
-            
-            // تفعيل العلامة المائية
-            document.getElementById('watermark').innerText = studentCode;
-        }
-
-        // استدعاء الدالة عند تحميل الصفحة
-        loadVideo();
+        // 5. تشغيل الفيديو
+        document.getElementById('bunny-iframe').src = embedUrl;
+        document.getElementById('watermark').innerText = 'المشترك: Ali-90123';
     </script>
 
 </body>
